@@ -224,6 +224,18 @@ def get_saved_eod_enriched( ticker, date, usecols =[] ):
         t=pd.read_csv( os.environ['TRANSFORMER_ROOT'] +'data/options/eod_enriched/' + ticker +'_'+ datetime.strftime(date, '%Y%m%d')+'.csv', usecols=usecols)
     else :
         t=pd.read_csv( os.environ['TRANSFORMER_ROOT'] +'data/options/eod_enriched/' + ticker +'_'+ datetime.strftime(date, '%Y%m%d')+'.csv')
+       
+    if 'Unnamed: 0' in (list(t.columns)) : 
+        t.drop(['Unnamed: 0'], axis = 1, inplace=True)
+    if 'Date' in (list(t.columns)) :
+        t['Date']=[ datetime.strptime(x,'%Y-%m-%d') for x in  t['Date']]
+    if 'ExpirationDate' in (list(t.columns)) :
+        t['ExpirationDate']=[ datetime.strptime(x,'%Y-%m-%d') for x in  t['ExpirationDate']]
+    if 'ExpirationTime' in (list(t.columns)) :    
+        t['ExpirationTime']=[ datetime.strptime(x,'%Y-%m-%d %H:%M:%S') for x in  t['ExpirationTime']]
+    if 'cycleTime' in (list(t.columns)) :
+        t['cycleTime']=[ datetime.strptime(x,'%Y-%m-%d %H:%M:%S') for x in  t['cycleTime']]
+        
     t=t[t['OpenAskPrice'].notna()]
     t.fillna(value={'OpenBidPrice': 0}, inplace=True)
     return t
