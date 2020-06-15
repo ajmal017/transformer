@@ -18,7 +18,7 @@ def universe_vertical_builder( ticker, date, optType, use_ttx_target = 15, term_
 #  1        VXX    20200515          C       28.0   -1       13.25        13.45        41.27 ...
     
     t=util_funcs.get_saved_eod_enriched(ticker,date)
-    t=t.drop(['Unnamed: 0'],axis=1)
+    #t=t.drop(['Unnamed: 0'],axis=1)
     t=t[(t['volErrorBar']>1e-6) & (t['volErrorBar']<10)]
 
     if use_ttx_target :
