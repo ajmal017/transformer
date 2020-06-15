@@ -30,10 +30,7 @@ def parse_rt_snapfile( fn ) :
         spot = float(t.loc[0][1].split('\n')[1])
     else :
         print( 'RECHECK DATA FILE FOR SPOT LAST PRICE, ROW OR COLUMN ID MIGHT BE OFF!!!')
-
-        
-#    fn_chunks=len(fn_w_path.split('/'))
-#    fn=fn_w_path.split('/')[fn_chunks-1]    
+   
     
     ticker=fn.split('_')[0]
     expTime = datetime.strptime( fn.split('_')[1] + ' 16:00:00', '%Y%m%d %H:%M:%S')
@@ -43,17 +40,27 @@ def parse_rt_snapfile( fn ) :
     snapminute = fn.split('_')[2][2:4]
     currentTime = datetime.strptime( snapday + ' ' + snaphour + ':' + snapminute +':00', '%Y%m%d %H:%M:%S')
 
-    header =list(t.loc[27])
-    t = t[28:]
-    t.columns = header
+    header_idx=t[t['Unnamed: 0']=='Select Contract'].index.values[0]
+    header =list(t.loc[header_idx])
+    t = t[header_idx+1:]
 
-    t=t.astype({'Bid': 'float','Ask':'float', 'Last':'float','Strike Price':'float'})
+    header[4] = 'Call Bid'
+    header[5] = 'Call Ask'
     header[12] = 'Put Bid'
     header[13] ='Put Ask'
     header[8] ='Strike'
     t.columns = header
 
-    df=t[['Bid','Ask','Strike']].copy()
+    calls = t[['Call Bid','Call Ask','Strike']].copy()
+    calls.rename(columns={'Call Bid':'Bid','Call Ask':'Ask'},inplace=True)
+    calls['CallPut'] = 'C'
+    puts = t[['Put Bid','Put Ask','Strike']].copy()
+    puts.rename(columns={'Put Bid':'Bid','Put Ask':'Ask'},inplace=True)
+    puts['CallPut'] = 'P'
+    df=pd.concat([calls,puts], sort=False )
+    
+    df=df.astype({'Ask':'float','Bid':'float','Strike':'float'})
+    
     df['ticker']=ticker
     df['currentTime'] = currentTime
     df['expTime'] = expTime
@@ -61,13 +68,15 @@ def parse_rt_snapfile( fn ) :
     df['ttx']=[x.total_seconds()/(365* 24*60*60) for x in list(df['expTime']-df['currentTime'])]
     df['spot'] = spot
     df['mid'] = ( df['Bid'] + df['Ask'])/2
-    df['optType'] ='C'
     df['width'] =df['Ask'] - df['Bid']
+    
+
+
     spots = np.array(df['spot'].values)
     prices = np.array(df['mid'].values)
     sks = np.array(df['Strike'].values)
     ttxs = np.array(df['ttx'].values)
-    optTypes = np.array(df['optType'].values)
+    optTypes = np.array(df['CallPut'].values)
     priceEBs = np.array(df['width'].values)
     
     
@@ -100,8 +109,10 @@ def parse_rt_snapfile( fn ) :
     
     return df
 
-def get_pos_analysis( fn, posSks ):
+
+def get_pos_analysis( fn, posSks, optType ):
     df = parse_rt_snapfile(fn)
+    df = df[df['CallPut'] ==optType ]
     return df[ [x in posSks for x in list(df['Strike']) ]]
 
 def trds_enrich( trds_flat ) :
