@@ -117,9 +117,9 @@ def get_pos_analysis( fn, posSks, optType ):
 
 def trds_enrich( trds_flat ) :
     jn=[]
-    for key,val in trds_flat.groupby(['Date','ExpirationDate']) :
-        print( 'processing ', key[0],' ',key[1], '\n')
-        t_mb = util_funcs.get_minutebar_raw_expiry('VXX',key[0],key[1],usecols=['Date','ExpirationDate','CallPut','Strike','OpenBidTime','OpenAskTime','OpenBidPrice','OpenAskPrice','UnderOpenBidPrice','UnderOpenAskPrice'])
+    for key,val in trds_flat.groupby(['Date','Ticker', 'ExpirationDate']) :
+        print( 'processing ', key[0],' ',key[1], ' ',key[2], '\n')
+        t_mb = util_funcs.get_minutebar_raw_expiry(key[1],key[0],key[2],usecols=['Date','ExpirationDate','CallPut','Strike','OpenBidTime','OpenAskTime','OpenBidPrice','OpenAskPrice','UnderOpenBidPrice','UnderOpenAskPrice'])
         t_mb['ExpirationDate']=[ datetime.strptime(x, '%Y%m%d') for x in t_mb['ExpirationDate']]
 
         for subkeys,subval in val.groupby(['Strike','CallPut']) :
