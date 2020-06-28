@@ -115,3 +115,59 @@ def get_enriched( snap ) :
 def get_IO_eod_enriched( tradeDate, month_code ):
     snap = get_eod_IO_options( tradeDate, month_code )
     return get_enriched( snap )
+
+
+def get_IO_options_raw( tradeDate, month = 3 ):
+    directory = DATA_ROOT_DIR + 'IO'+tradeDate.strftime('%Y%m%d')+'/'
+    call_fns = [] 
+    put_fns = [] 
+    for filename in os.listdir(directory):
+        if (filename.find('-C-') >=0 ):
+            call_fns.append(filename)
+        elif (filename.find('-P-') >=0 ):
+            put_fns.append(filename)
+    closeTime = datetime.strptime( tradeDate.strftime('%Y-%m-%d') + ' 15:00:00.000', '%Y-%m-%d %H:%M:%S.%f' )  
+    all_t = []
+    for fn in call_fns :
+        expCode = fn.split( '-')[0]
+        expCode = expCode.replace('IO','')
+
+        if int( expCode[2:] ) != month :
+            continue
+
+        t = pd.read_csv(directory + fn)
+        t=t[['markettime','bidprice1','askprice1','bidvolume1','askvolume1','volume','openinterest']]
+        t['tradeTime']=[datetime.strptime( x+'000', '%Y-%m-%d %H:%M:%S.%f') for x in t['markettime']]
+        t=t[t['tradeTime']<closeTime]
+
+        strike_str = fn.split( '-')[2]
+        strike = float(strike_str.split('_')[0])
+        tt = t #t[t['tradeTime'] ==t.tradeTime.max()].copy()
+
+        tt['Strike'] = strike
+        tt['expTime'] = getExpTimeFromCode(expCode)
+        tt['optType'] ='C'
+        all_t.append(tt)
+
+    for fn in put_fns :
+        expCode = fn.split( '-')[0]
+        expCode = expCode.replace('IO','')
+        if int( expCode[2:] ) != month :
+            continue
+        t = pd.read_csv(directory + fn)
+        t=t[['markettime','bidprice1','askprice1','bidvolume1','askvolume1','volume','openinterest']]
+        t['tradeTime']=[datetime.strptime( x+'000', '%Y-%m-%d %H:%M:%S.%f') for x in t['markettime']]
+        t=t[t['tradeTime']<closeTime]
+
+        strike_str = fn.split( '-')[2]
+        strike = float(strike_str.split('_')[0])
+        tt = t #t[t['tradeTime'] ==t.tradeTime.max()].copy()
+        tt['Strike'] = strike
+        tt['expTime'] = getExpTimeFromCode(expCode)
+        tt['optType'] = 'P'
+        all_t.append(tt)
+    allt=pd.concat(all_t)
+    
+    fut_d = get_futures_prices( tradeDate, month )
+    fitsecraw = allt.merge(fut_d, how='left',on=['tradeTime'],suffixes=('', '_future'))
+    return fitsecraw[['expTime','Strike','optType', 'tradeTime', 'bidprice1','askprice1','bidvolume1', 'askvolume1', 'volume','openinterest','bidprice1_future','askprice1_future','bidvolume1_future','askvolume1_future']]
