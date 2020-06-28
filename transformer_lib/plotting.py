@@ -1,6 +1,6 @@
 import plotly.graph_objects as go
 
-def get_layout( title = '', xaxis = '', yaxis = '', y2axis = '', y3axis = ''):
+def get_layout( title = '', xaxis = '', yaxis = '', y2axis = '', y3axis = '', yrange =[]):
     return go.Layout(
         title=title,
         xaxis=dict(
@@ -14,7 +14,8 @@ def get_layout( title = '', xaxis = '', yaxis = '', y2axis = '', y3axis = ''):
             overlaying='x', 
             side='top' ),
         yaxis=dict(
-            title=yaxis
+            title=yaxis,
+            range=yrange
         ),
         yaxis2=dict(
             title=y2axis,
