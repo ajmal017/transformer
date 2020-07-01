@@ -24,6 +24,10 @@ def convert_dt64_to_dt( dt64 ):
     ts = (dt64 - np.datetime64('1970-01-01T00:00:00')) / np.timedelta64(1, 's')
     return datetime.utcfromtimestamp(ts).date()
 
+def convert_dt64_to_datetime( dt64 ):
+    ts = (dt64 - np.datetime64('1970-01-01T00:00:00')) / np.timedelta64(1, 's')
+    return datetime.utcfromtimestamp(ts)
+
 def date_string_to_datetime( date_string) :
     return datetime.strptime(date_string, '%Y-%m-%d')
 
