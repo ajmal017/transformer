@@ -4,3 +4,4 @@ Tedbowang/*
 transformer_lib/__pycache__/*
 notebooks/*
 huifeng_python_backtest/__pycache__/*
+huifeng_python_backtest/*.so
