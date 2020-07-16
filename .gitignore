@@ -1,2 +1,6 @@
 # exclude everything 
 data/*
+Tedbowang/*
+transformer_lib/__pycache__/*
+notebooks/*
+huifeng_python_backtest/__pycache__/*
